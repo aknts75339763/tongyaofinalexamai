@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>🫁 肺癌CT分析系统</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#07090d;--s1:#0d1117;--s2:#161b22;--s3:#1f2937;--border:#21262d;--border2:#30363d;--mal:#f85149;--mal-dim:rgba(248,81,73,.12);--ben:#e3b341;--ben-dim:rgba(227,179,65,.10);--nor:#3fb950;--nor-dim:rgba(63,185,80,.10);--blue:#58a6ff;--blue-dim:rgba(88,166,255,.10);--text:#c9d1d9;--text-b:#e6edf3;--text-d:#8b949e;--text-dd:#484f58;--radius:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+header{position:sticky;top:0;z-index:100;height:56px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(7,9,13,.95);border-bottom:1px solid var(--border);backdrop-filter:blur(12px)}
+.logo{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--text-b)}
+.logo-badge{font-size:10px;padding:2px 7px;border-radius:3px;background:var(--nor-dim);border:1px solid rgba(63,185,80,.3);color:var(--nor)}
+.sv{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-d)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text-dd);transition:all .4s}
+.dot.ok{background:var(--nor);box-shadow:0 0 8px var(--nor)}.dot.err{background:var(--mal)}.dot.chk{background:var(--ben);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+main{max-width:1200px;margin:0 auto;padding:40px 32px 80px;display:grid;grid-template-columns:400px 1fr;gap:24px}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:20px 16px 60px}header{padding:0 16px}}
+.panel{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.ph{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.ph h2{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--text-b);text-transform:uppercase;letter-spacing:.1em}
+.phd{width:8px;height:8px;border-radius:50%;flex-shrink:0}.pb{padding:20px}
+.uz{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:36px 20px;text-align:center;cursor:pointer;transition:all .25s;background:var(--s2);position:relative}
+.uz:hover,.uz.drag{border-color:var(--blue);background:var(--blue-dim)}
+.uzi{font-size:38px;display:block;margin-bottom:12px}
+.uzt{font-size:14px;color:var(--text-b);margin-bottom:6px;font-weight:500}
+.uzs{font-size:12px;color:var(--text-d);line-height:1.6}
+.uztags{margin-top:12px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--s3);border:1px solid var(--border2);color:var(--text-d);padding:2px 9px;border-radius:3px}
+#pw{display:none;margin-top:14px}
+.pbox{border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;position:relative;background:#000}
+#pi{width:100%;max-height:220px;object-fit:contain;display:block;filter:contrast(1.1) brightness(.95)}
+.pbar{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(transparent,rgba(0,0,0,.85));display:flex;align-items:center;justify-content:space-between}
+.pinfo{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.5)}
+.rb{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-d);background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .2s}
+.rb:hover{color:var(--mal);border-color:var(--mal)}
+#ab{width:100%;margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#fff;background:var(--mal);border:none;border-radius:var(--radius);padding:13px;cursor:pointer;transition:all .2s}
+#ab:disabled{background:var(--s3);color:var(--text-dd);cursor:not-allowed}
+#ab:not(:disabled):hover{background:#da3633;box-shadow:0 0 24px rgba(248,81,73,.3)}
+.tip{margin-top:10px;font-size:11px;color:var(--text-dd);text-align:center;line-height:1.6}
+#rp .pb{padding:0}
+#es{padding:64px 24px;text-align:center;color:var(--text-dd);font-size:12px;line-height:2.2}
+.ei{font-size:52px;display:block;margin-bottom:16px;opacity:.2}
+#ls{display:none;padding:52px 24px;text-align:center}
+.rings{width:72px;height:72px;margin:0 auto 20px;position:relative}
+.ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;border-top-color:var(--mal);animation:spin 1s linear infinite}
+.ring:nth-child(2){inset:10px;border-top-color:var(--ben);animation-duration:1.6s;animation-direction:reverse}
+.ring:nth-child(3){inset:20px;border-top-color:var(--blue);animation-duration:.8s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lt{font-size:13px;color:var(--text-d)}
+.lst{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dd);margin-top:6px;animation:pulse 1.5s ease infinite}
+.lwarn{font-size:11px;color:var(--ben);margin-top:12px;opacity:.8}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+#err{display:none;padding:40px 24px;text-align:center}
+.eri{font-size:40px;margin-bottom:12px}
+.ert{font-size:14px;color:var(--mal);font-weight:600;margin-bottom:8px}
+.erd{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-d);line-height:1.8;background:var(--mal-dim);border:1px solid rgba(248,81,73,.2);padding:10px 14px;border-radius:6px;margin-top:10px;text-align:left}
+#rc{display:none}
+.ob{padding:18px 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
+.ob.high{background:var(--mal-dim)}.ob.medium{background:var(--ben-dim)}.ob.low{background:var(--nor-dim)}
+.obi{font-size:34px;flex-shrink:0}
+.obf{font-size:15px;font-weight:700;color:var(--text-b);margin-bottom:4px}
+.obr{font-family:'IBM Plex Mono',monospace;font-size:11px}
+.ob.high .obr{color:var(--mal)}.ob.medium .obr{color:var(--ben)}.ob.low .obr{color:var(--nor)}
+.annsec{padding:16px 20px;border-bottom:1px solid var(--border)}
+.anntitle{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+#aimg{width:100%;border-radius:6px;border:1px solid var(--border2);display:block}
+.sh{padding:12px 24px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--text-dd);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--border)}
+.nl{padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.nc{background:var(--s2);border:1px solid var(--border2);border-radius:7px;padding:14px 16px;transition:border-color .2s}
+.nc:hover{border-color:var(--blue)}
+.nct{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ncid{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-d)}
+.ncc{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600}
+.rh .ncc{color:var(--mal)}.rm .ncc{color:var(--ben)}.rl .ncc{color:var(--nor)}
+.ncg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.ncf label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dd);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:3px}
+.ncf span{font-size:12px;color:var(--text-b)}
+.ncs{font-size:11px;color:var(--text-d);background:var(--s3);border-radius:4px;padding:6px 10px;line-height:1.6;margin-bottom:8px}
+.ncs strong{color:var(--text-b)}
+.ncsg{font-size:11px;line-height:1.7;padding:8px 10px;border-radius:4px;border-left:3px solid}
+.rh .ncsg{background:var(--mal-dim);border-color:var(--mal);color:rgba(248,81,73,.9)}
+.rm .ncsg{background:var(--ben-dim);border-color:var(--ben);color:rgba(227,179,65,.9)}
+.rl .ncsg{background:var(--nor-dim);border-color:var(--nor);color:rgba(63,185,80,.9)}
+.nn{padding:32px 24px;text-align:center;color:var(--nor);font-size:14px;font-weight:500}
+.nns{font-size:11px;color:var(--text-d);margin-top:6px}
+.disc{margin:0;padding:10px 24px 16px;font-size:10px;color:var(--text-dd);line-height:1.7;border-top:1px solid var(--border)}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s2);border:1px solid var(--border2);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 20px;border-radius:6px;opacity:0;pointer-events:none;transition:all .25s;z-index:999;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head><body>
+<header>
+  <div class="logo">🫁 肺癌CT分析系统 <span class="logo-badge">MONAI · RetinaNet</span></div>
+  <div class="sv"><span class="dot chk" id="sd"></span><span id="sl">连接中...</span></div>
+</header>
+<main>
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div class="panel">
+      <div class="ph"><div class="phd" style="background:var(--blue)"></div><h2>上传影像</h2></div>
+      <div class="pb">
+        <div class="uz" id="dz">
+          <span class="uzi">🗂️</span>
+          <div class="uzt">点击选择或拖拽文件</div>
+          <div class="uzs">支持 DCM、JPG、PNG 格式</div>
+          <div class="uztags"><span class="tag">.dcm</span><span class="tag">.jpg</span><span class="tag">.png</span></div>
+        </div>
+        <input type="file" id="fi" accept=".dcm,.dicom,.jpg,.jpeg,.png" style="display:none"/>
+        <div id="pw">
+          <div class="pbox">
+            <img id="pi" alt="预览"/>
+            <div class="pbar"><span class="pinfo" id="pinfo"></span><button class="rb" onclick="clf()">× 移除</button></div>
+          </div>
+        </div>
+        <button id="ab" disabled onclick="analyze()">⬡ 开始分析</button>
+        <div class="tip">⏱ CPU推理约需 1~3 分钟，请耐心等待</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="phd" style="background:var(--text-dd)"></div><h2>图例说明</h2></div>
+      <div class="pb" style="font-size:12px;color:var(--text-d);line-height:2">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px"><div style="width:16px;height:16px;border:3px solid #FF3B3B;border-radius:2px"></div><span>红色 — 高风险（&gt;60%）</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><div style="width:16px;height:16px;border:3px solid #FFB800;border-radius:2px"></div><span>黄色 — 中等风险（30-60%）</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><div style="width:16px;height:16px;border:3px solid #00E676;border-radius:2px"></div><span>绿色 — 低风险（&lt;30%）</span></div>
+        </div>
+        <p style="margin-top:12px;color:var(--text-dd);font-size:11px">⚠️ 仅供学习研究，不得用于临床诊断</p>
+      </div>
+    </div>
+  </div>
+  <div class="panel" id="rp">
+    <div class="ph"><div class="phd" style="background:var(--mal)"></div><h2>分析结果</h2></div>
+    <div class="pb">
+      <div id="es"><span class="ei">🔬</span>上传图像后分析结果将显示在这里</div>
+      <div id="ls">
+        <div class="rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+        <div class="lt">模型分析中...</div>
+        <div class="lst" id="lstep">初始化...</div>
+        <div class="lwarn">⏱ CPU推理中，请等待 1~3 分钟</div>
+      </div>
+      <div id="err"><div class="eri">⚠️</div><div class="ert">分析失败</div><div class="erd" id="erd"></div></div>
+    </div>
+    <div id="rc">
+      <div class="ob" id="ob"><div class="obi" id="obi"></div><div><div class="obf" id="obf"></div><div class="obr" id="obr"></div></div></div>
+      <div class="annsec"><div class="anntitle">📍 病变区域标注</div><img id="aimg" alt="标注"/></div>
+      <div class="sh">结节详情</div>
+      <div class="nl" id="nl"></div>
+      <p class="disc" id="disc"></p>
+    </div>
+  </div>
+</main>
+<div id="toast"></div>
+<script>
+// ⚠️ 每次重启 Colab 后把下面的 URL 换成最新的 ngrok 地址
+const B = 'https://请替换为你的ngrok地址', H = {'ngrok-skip-browser-warning':'true'};
+let cf = null;
+
+// 连接状态检测
+async function cs() {
+  try {
+    const r = await fetch(B+'/health', {headers:H, signal:AbortSignal.timeout(8000)});
+    const d = await r.json();
+    document.getElementById('sd').className = 'dot ok';
+    document.getElementById('sl').textContent = '已连接·'+d.device+'·'+(d.model_loaded?'就绪':'模型未加载');
+  } catch {
+    document.getElementById('sd').className = 'dot err';
+    document.getElementById('sl').textContent = '后端未启动';
+  }
+}
+cs(); setInterval(cs, 10000);
+
+// 文件上传 — 点击上传区域触发
+const dz = document.getElementById('dz');
+const fi = document.getElementById('fi');
+
+dz.addEventListener('click', () => fi.click());
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag');
+  if (e.dataTransfer.files[0]) hf(e.dataTransfer.files[0]);
+});
+fi.addEventListener('change', function() {
+  if (this.files && this.files[0]) hf(this.files[0]);
+});
+
+function hf(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['dcm','dicom','jpg','jpeg','png'].includes(ext)) { toast('请上传 DCM/JPG/PNG','warn'); return; }
+  cf = file;
+  const img = document.getElementById('pi');
+  if (['jpg','jpeg','png'].includes(ext)) {
+    img.src = URL.createObjectURL(file);
+  } else {
+    img.src = 'data:image/svg+xml,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120"><rect width="400" height="120" fill="#0d1117"/>' +
+      '<text x="200" y="65" text-anchor="middle" fill="#484f58" font-family="monospace" font-size="12">DICOM: ' + file.name + '</text></svg>'
+    );
+  }
+  document.getElementById('pinfo').textContent = file.name + ' · ' + (file.size/1024).toFixed(1) + ' KB';
+  document.getElementById('pw').style.display = 'block';
+  document.getElementById('ab').disabled = false;
+  rst();
+}
+
+function clf() {
+  cf = null; fi.value = '';
+  document.getElementById('pw').style.display = 'none';
+  document.getElementById('ab').disabled = true;
+  rst();
+}
+
+function rst() { sh('es'); hd('ls'); hd('err'); document.getElementById('rc').style.display = 'none'; }
+
+async function analyze() {
+  // 如果 cf 为空，再从 input 取一次
+  if (!cf) {
+    const f = fi.files;
+    if (f && f[0]) { cf = f[0]; }
+    else { toast('请先上传文件','warn'); return; }
+  }
+  const btn = document.getElementById('ab');
+  btn.disabled = true;
+  hd('es'); hd('err');
+  document.getElementById('rc').style.display = 'none';
+  sh('ls');
+  const steps = ['初始化检测器...','读取影像...','图像预处理...','结节检测中...','绘制标注...','生成报告...'];
+  let si = 0;
+  const t = setInterval(() => {
+    document.getElementById('lstep').textContent = steps[Math.min(si++, steps.length-1)];
+  }, 20000);
+  try {
+    const fd = new FormData();
+    fd.append('file', cf);
+    const res = await fetch(B+'/analyze', {method:'POST', headers:H, body:fd, signal:AbortSignal.timeout(300000)});
+    clearInterval(t);
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'HTTP '+res.status); }
+    render(await res.json());
+  } catch(e) {
+    clearInterval(t); hd('ls'); sh('err');
+    document.getElementById('erd').textContent = e.message || String(e);
+    toast('分析失败','error');
+  } finally { btn.disabled = false; }
+}
+
+function render(d) {
+  hd('ls'); hd('es'); hd('err');
+  const ov = d.overall||{}, ns = d.nodules||[], rk = ov.risk||'low';
+  const ob = document.getElementById('ob');
+  ob.className = 'ob ' + rk;
+  document.getElementById('obi').textContent = rk==='high'?'🔴':rk==='medium'?'🟡':'🟢';
+  document.getElementById('obf').textContent = ov.finding||'分析完成';
+  document.getElementById('obr').textContent =
+    rk==='high' ? '最高置信度 '+ov.highest_confidence+'% · 建议尽快就诊' :
+    rk==='medium'? '最高置信度 '+ov.highest_confidence+'% · 建议随访复查' : '未见明显高风险结节';
+  if (d.annotated_image) document.getElementById('aimg').src = d.annotated_image;
+  const nl = document.getElementById('nl');
+  nl.innerHTML = '';
+  if (!ns.length) {
+    nl.innerHTML = '<div class="nn">✅ 未检测到结节<div class="nns">建议按常规体检周期复查</div></div>';
+  } else {
+    ns.forEach(n => {
+      const rc = n.confidence>60?'rh':n.confidence>30?'rm':'rl';
+      const c = document.createElement('div');
+      c.className = 'nc ' + rc;
+      c.innerHTML =
+        '<div class="nct"><span class="ncid">结节 #'+n.id+'</span><span class="ncc">置信度 '+n.confidence+'%</span></div>'+
+        '<div class="ncg">'+
+          '<div class="ncf"><label>大小</label><span>'+n.size_mm+' mm</span></div>'+
+          '<div class="ncf"><label>风险等级</label><span>'+n.risk_level+'</span></div>'+
+          '<div class="ncf"><label>位置 X</label><span>'+n.location.x_pct+'%</span></div>'+
+          '<div class="ncf"><label>位置 Y</label><span>'+n.location.y_pct+'%</span></div>'+
+        '</div>'+
+        '<div class="ncs"><strong>分期参考：</strong>'+n.stage_reference+'</div>'+
+        '<div class="ncsg">'+n.suggestion+'</div>';
+      nl.appendChild(c);
+    });
+  }
+  document.getElementById('disc').textContent = d.disclaimer||'';
+  document.getElementById('rc').style.display = 'block';
+}
+
+function sh(id) { document.getElementById(id).style.display = ''; }
+function hd(id) { document.getElementById(id).style.display = 'none'; }
+function toast(m, t='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = m;
+  el.style.borderColor = t==='error'?'rgba(248,81,73,.4)':t==='warn'?'rgba(227,179,65,.3)':'var(--border2)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+document.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey && cf) analyze(); });
+</script>
+</body></html>
